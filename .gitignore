@@ -27,7 +27,7 @@ template.json
 /template/*
 
 # lib
-/lib/*
+# /lib/*
 
 # documentation
 storybook-static
