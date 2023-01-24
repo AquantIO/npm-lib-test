@@ -39,7 +39,9 @@
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
   "style": "lib/default.css",
-  "icons": "lib/icons.esm.js",
+  "exports": {
+    "icons": "./lib/icons.js"
+  },
   "engines": {
     "node": ">=10"
   },
