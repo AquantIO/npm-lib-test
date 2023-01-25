@@ -11,65 +11,77 @@ import postcssPresetEnv from 'postcss-preset-env';
 import {terser} from 'rollup-plugin-terser';
 import pkg from './package.json';
 
-const outputs = [
-  {
-    file: process.env.REACT_APP_PKG_MAIN || pkg.main,
-    format: 'umd',
-  },
-  {
-    file: process.env.REACT_APP_PKG_MODULE || pkg.module,
-    format: 'es',
-  },
-];
+const importPathToInput = {
+    '.': 'src/lib/index.js',
+};
+
+(() => {
+    const existingInExports = new Set(Object.keys(pkg.exports));
+    Object.keys(importPathToInput).forEach(importPath => {
+        if (!existingInExports.has(importPath)) {
+            throw new Error(`rollup config error! missing item ${importPath} in package.json exports`);
+        }
+        existingInExports.delete(importPath);
+    });
+
+    if (existingInExports.size > 0) {
+        throw new Error(`rollup config error! missing items ${[...existingInExports]} in importPathToInput`);
+    }
+})();
+
+const outputs = Object.entries(pkg.exports).map(([importPath, exportFile]) => ({
+    input: importPathToInput[importPath],
+    file: exportFile,
+}));
 
 const postcssPlugins = [
-  postcssPresetEnv({
-    browsers: pkg.browserslist.production,
-    stage: 3,
-  }),
-  autoprefixer(),
+    postcssPresetEnv({
+        browsers: pkg.browserslist.production,
+        stage: 3,
+    }),
+    autoprefixer(),
 ];
 
-const config = outputs.map(({file, format}) => ({
-  input: 'src/lib/index.js',
-  output: {
-    file,
-    format,
-    name: 'ReactCalendarToolkit',
-    globals: {
-      react: 'React',
-      'react-dom': 'ReactDOM',
+const config = outputs.map(({file, input}) => ({
+    input,
+    output: {
+        file,
+        format: 'esm',
+        exports: 'named',
+        sourceMap: true,
     },
-    exports: 'named',
-  },
-  plugins: [
-    peerDepsExternal(),
-    includePaths({
-      include: {},
-      paths: ['src'],
-      external: Object.keys(pkg.dependencies),
-      extensions: ['.js', '.json', '.html'],
-    }),
-    stylelint({
-      throwOnError: true,
-    }),
-    postcss({
-      extract: process.env.REACT_APP_PKG_STYLE || pkg.style,
-      inline: false,
-      plugins: postcssPlugins,
-    }),
-    babel({
-      babelHelpers: 'bundled',
-      exclude: 'node_modules/**',
-      configFile: './babel.config.rollup.js',
-    }),
-    resolve({
-      browser: true,
-    }),
-    commonjs(),
-    terser(),
-    filesize(),
-  ],
+    plugins: [
+        peerDepsExternal(),
+        includePaths({
+            include: {},
+            paths: ['src'],
+            external: Object.keys(pkg.dependencies),
+            extensions: ['.js', '.json', '.html'],
+        }),
+        stylelint({
+            throwOnError: true,
+        }),
+        postcss({
+            extract: process.env.REACT_APP_PKG_STYLE || pkg.style,
+            inline: false,
+            plugins: postcssPlugins,
+            modules: {
+                generateScopedName: 'Aqui-[name]__[local]___[hash:base64:5]',
+            },
+        }),
+
+        babel({
+            babelHelpers: 'bundled',
+            exclude: 'node_modules/**',
+            configFile: './babel.config.rollup.js',
+        }),
+        resolve({
+            browser: true,
+        }),
+        commonjs(),
+        terser(),
+        filesize(),
+    ],
 }));
 
 export default config;
