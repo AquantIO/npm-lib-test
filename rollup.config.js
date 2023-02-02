@@ -13,6 +13,7 @@ import pkg from './package.json';
 
 const importPathToInput = {
     '.': 'src/lib/index.js',
+    './icons': 'src/lib/icons.js',
 };
 
 (() => {
@@ -48,7 +49,6 @@ const config = outputs.map(({file, input}) => ({
         file,
         format: 'esm',
         exports: 'named',
-        sourceMap: true,
     },
     plugins: [
         peerDepsExternal(),
@@ -56,7 +56,7 @@ const config = outputs.map(({file, input}) => ({
             include: {},
             paths: ['src'],
             external: Object.keys(pkg.dependencies),
-            extensions: ['.js', '.json', '.html'],
+            extensions: ['.jsx', '.js', '.json', '.html'],
         }),
         stylelint({
             throwOnError: true,
@@ -69,7 +69,6 @@ const config = outputs.map(({file, input}) => ({
                 generateScopedName: 'Aqui-[name]__[local]___[hash:base64:5]',
             },
         }),
-
         babel({
             babelHelpers: 'bundled',
             exclude: 'node_modules/**',

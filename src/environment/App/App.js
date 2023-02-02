@@ -4,7 +4,7 @@ import classes from './App.module.scss';
 
 const App = () => (
     <div className={classes.container}>
-        <Counter initialValue={0} />
+        <Counter />
     </div>
 );
 
